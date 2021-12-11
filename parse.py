@@ -29,6 +29,8 @@ numbers: tuple = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".")
 
 operators: tuple = ("+", "-", "*", "/", "%", "^", "&", "|", "~")
 
+order: tuple = ("(", "{", "[", "^", "*", "!", "/", "%", "+", "-", "&", "|", "~")
+
 #functions: tuple = ("log", "sin", "cos", "tan", "asin", "acos", "atan", "atan2")
 
 def LastIndex(ls: tuple, vals: list):
@@ -71,14 +73,23 @@ def IndexValid(ls: list):
 			indexes.append(i)
 	return indexes
 
-def Parse(text: str):
+def MostNestedBrackets(text: str) -> (int, int):
+	indexes: list = []
+	for index, char in enumerate(text):
+		if char in ("(", "{", "["):
+			indexes.append((index, True))
+		elif char in (")", "}", "]"):
+			indexes.append((index, False))
+	differences: dict = {}
+
+def Parse(text: str) -> str:
 	print(text)
 
 	#parsing
-	values: list = []
-	val: str = ""
 	last: str = ''
+	lastSignificant: list = ['', 0]
 	closed: bool = True
+	reachedNumber: bool = False
 	brackets: dict = {
 		"(" : 0,
 		"{" : 0,
@@ -87,9 +98,13 @@ def Parse(text: str):
 	#making sure syntax is valid
 	for index, char in enumerate(list(text)):
 		if char in valid:
-			if char == " ":
-				values.append(val)
-				val = ""
+			if char in numbers and not reachedNumber:
+				reachedNumber = True
+			if char in operators and not reachedNumber:
+				print(f"Error: ")
+				print(f"\t{Colours.Bold}{Colours.Red}{text}")
+				print(f"\t{Colours.Red}"+f"~"*(index) + "^")
+				print(f"{Colours.Default}Character {index + 1}, expected number before operator: '{Colours.Red}{char}{Colours.Default}'")
 			#checking brackets
 			if char in precedence:
 				closed = sum(brackets.values()) == 0
@@ -108,30 +123,14 @@ def Parse(text: str):
 					else:
 						brackets["["] -= 1
 			#checking syntax
-			if last in numbers:
-				if char not in numbers:
-					values.append(val)
-					val = ""
-				else:
-					val = val + char
-			elif last in operators:
+			if lastSignificant[0] in operators:
 				if char in operators:
 					print("Error: ")
 					print(f"\t{Colours.Bold}{Colours.Red}{text}")
-					print(f"\t{Colours.Red}"+f"~"*(index) + "^")
+					print(f"\t{Colours.Red}"+f"~"*(lastSignificant[1] + (index - lastSignificant[1])) + "^")
 					print(f"{Colours.Default} Character {index + 1}, unexpected operator: '{Colours.Red}{char}{Colours.Default}'")
-				if char not in operators:
-					values.append(val)
-					val = ""
-				else:
-					val = val + char
-			elif last in variables:
-				if char not in variables:
-					values.append(val)
-					val = ""
-				else:
-					val = val + char
 			last = char
+			if char != " ": lastSignificant = [char, index]
 		#invalid character
 		else:
 			print(f"Error: ")
@@ -143,7 +142,8 @@ def Parse(text: str):
 	if not closed:
 		print(f"Error: ")
 		print(f"Incomplete bracket formatting")
-	
-	deepestIndex: int = 0
-	opened: int = 0
 
+	value: float = 0
+
+	for index, char in text:
+		pass
