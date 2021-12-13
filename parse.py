@@ -1,4 +1,3 @@
-#import re as regex
 class Colours:
 	Header = '\033[95m'
 	EndC = '\033[0m'
@@ -29,7 +28,7 @@ numbers: tuple = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".")
 
 operators: tuple = ("+", "-", "*", "/", "%", "^", "&", "|", "~")
 
-order: tuple = ("(", "{", "[", "^", "*", "!", "/", "%", "+", "-", "&", "|", "~")
+order: tuple = ("(", "{", "[", "^", "*", "/", "%", "+", "-", "&", "|", "~")
 
 #functions: tuple = ("log", "sin", "cos", "tan", "asin", "acos", "atan", "atan2")
 
@@ -73,16 +72,45 @@ def IndexValid(ls: list):
 			indexes.append(i)
 	return indexes
 
-def MostNestedBrackets(text: str) -> (int, int):
-	indexes: list = []
-	for index, char in enumerate(text):
-		if char in ("(", "{", "["):
-			indexes.append((index, True))
-		elif char in (")", "}", "]"):
-			indexes.append((index, False))
-	differences: dict = {}
+def SimpleCalc(a: float, b: float, operator: str):
+	if operator == "^":
+		return a ** b
+	if operator == "*":
+		return a * b
+	if operator == "/":
+		return a / b
+	if operator == "%":
+		return a % b
+	if operator == "+":
+		return a + b
+	if operator == "-":
+		return a - b
+	if operator == "&":
+		return int(a) & int(b)
+	if operator == "|":
+		return int(a) | int(b)
+	if operator == "~":
+		return int(a) ^ int(b)
 
-def Parse(text: str) -> str:
+def GetNums(text: str) -> tuple:
+	s: str = ""
+	ls: list = []
+	for char in text:
+		if char not in numbers and s != "":
+			ls.append(s)
+			s = ""
+		else:
+			s = s + char
+	if len(ls) and s != "":
+		ls.append(s)
+	return ls
+
+def Evaluate(text : str) -> float:
+	opers: list = [x for x in text if x in operators]
+	nums: list = GetNums(text)
+	value: float = 0
+
+def Parse(text: str) -> float:
 	print(text)
 
 	#parsing
@@ -96,7 +124,7 @@ def Parse(text: str) -> str:
 		"[" : 0,
 	}
 	#making sure syntax is valid
-	for index, char in enumerate(list(text)):
+	for index, char in enumerate(text):
 		if char in valid:
 			if char in numbers and not reachedNumber:
 				reachedNumber = True
@@ -143,7 +171,55 @@ def Parse(text: str) -> str:
 		print(f"Error: ")
 		print(f"Incomplete bracket formatting")
 
-	value: float = 0
+	def Deepest(text: str, xcpt: tuple = ()):
+		ind: int = 0
+		deepest: int = 0
+		howDeep: int = 0
+		if sum([text.count('('), text.count('{'), text.count('{')]):
+			try:
+				return text.index("("), text.index("(")
+			except: pass
+			try:
+				return text.index("{"), text.index("{")
+			except: pass
+			try:
+				return text.index("["), text.index('[')
+			except:
+				pass
+			
+		for index, char in enumerate(text):
+			if char in ("(", "{", "["):
+				if howDeep > deepest and index not in xcpt:
+					deepest = howDeep
+					ind = index
+				howDeep += 1
+			elif char in (")", "}", "]"):
+				howDeep -= 1
+		return (ind, deepest)
 
-	for index, char in text:
-		pass
+	mostNestedIndexes: list = []
+	i: int = 0
+	char: str = ''
+	vals: dict = {
+	}
+	eq: tuple = ()
+	bracketsToEvaluate: int = text.count('(') + text.count("{") + text.count("[")
+	while i < len(text):
+		char = text[i]
+		if bracketsToEvaluate > 0:
+			i = Deepest(text, mostNestedIndexes)[0] + 1
+			mostNestedIndexes.append(i)
+			nextBracket: int = 0
+			for t in range(i, len(text)):
+				if text[t] in (")", "}", "]"):
+					nextBracket = t
+					break
+			tmp: str = text[i: nextBracket]
+			print(tmp, i)
+			opers: list = [x for x in tmp if x in operators]
+			nums: list = GetNums(tmp)
+			value: float = 0
+			print(opers, nums)
+			Evaluate(text)
+			bracketsToEvaluate -= 1
+		i += 1
