@@ -1,3 +1,4 @@
+import math
 class Colours:
 	Header = '\033[95m'
 	EndC = '\033[0m'
@@ -19,7 +20,7 @@ variables: tuple = ("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",
 precedence = ("(", ")",  "{", "}", "[", "]")
 
 valid: tuple = ("=", "+", "-", "(", ")", ".", ",", "/", "*", "&", "^",
-"%", "!", "{", "}", "[", "]", "|", "~", "log", "sin", "cos", "tan", "asin",
+"%", "{", "}", "[", "]", "|", "~", "log", "sin", "cos", "tan", "asin",
 "acos", "atan", "atan2", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
 "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
 "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", " ")
@@ -30,7 +31,7 @@ operators: tuple = ("+", "-", "*", "/", "%", "^", "&", "|", "~")
 
 order: tuple = ("(", "{", "[", "^", "*", "/", "%", "+", "-", "&", "|", "~")
 
-#functions: tuple = ("log", "sin", "cos", "tan", "asin", "acos", "atan", "atan2")
+functions: tuple = ("log", "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "fac")
 
 def LastIndex(ls: tuple, vals: list):
 	index: int = 0
@@ -105,77 +106,78 @@ def GetNums(text: str) -> tuple:
 		ls.append(s)
 	return ls
 
-def Evaluate(text : str) -> float:
-	tmp: str = text
+def Evaluate(text: list) -> float:
+	def Separate(txt: str) -> (str, str, str):
+		a, b, op = "", "", ""
+		addToA = True
+		for char in [x for x in txt if x != '']:
+			if char in operators and op == '':
+				addToA = False
+				op = char
+				continue
+			if addToA and char in numbers:
+				a = a + char
+			elif not addToA and char in numbers:
+				b = b + char
+		return a, b, op
+	ls = [x for x in text if x != ' ']
+	tmp: str = ""
+	for char in ls:
+		tmp = tmp + char
 	for o in order:
 		while o in tmp:
 			if o == '^':
-				ind = len(tmp) - tmp[::-1].index(o)
+				ind = len(tmp) - 1 - tmp[::-1].index(o)
 				l: int = 0
 				r: int = 0
-				reachedNumber: bool = False
-				for i in range(0, ind, -1):
-					if tmp[i] in numbers and not reachedNumber:
-						reachedNumber = True
-					if reachedNumber and tmp[i] not in numbers:
-						l = i + 1
-				for i in range(ind, len(tmp)):
-					if tmp[i] in numbers and not reachedNumber:
-						reachedNumber = True
-					if reachedNumber and tmp[i] not in numbers:
-						r = i
-				print(l, r, len(tmp), ind)
-				op: str = [x for x in tmp[l:r] if x in operators][0]
-				a: str = ""
-				b: str = ""
-				for char in tmp[l:r]:
-					if char not in numbers:
+				for i in range(ind - 1, 0, -1):
+					print("I:", i)
+					if tmp[i] not in numbers:
+						l = i -1
 						break
-					a = a + char
-				for char in tmp[tmp[l:r].index(op):r]:
-					if char in numbers:
-						b = b + char
-				t = tmp[:l]
-				print(t, l)
-				t = t + str(SimpleCalc(float(a), float(b), op))
-				t = t + tmp[r:len(tmp)]
-				tmp = t
+				for i in range(ind + 1, len(tmp)):
+					r = i
+					if tmp[i] not in numbers:
+						r += 1
+						break
+				a, b, op = Separate(tmp[l:r + 1])
+				new = tmp[:l]
+				new = new + str(SimpleCalc(float(a), float(b), op))
+				new = new + tmp[r + 1:len(tmp)]
+				tmp = new
+			if o == '!':
+				ind = tmp.index(o)
+				l: int = 0
+				for i in range(ind - 1, 0, -1):
+					print("I:", i)
+					if tmp[i] not in numbers:
+						l = i -1
+						break
+				new = tmp[:l]
+				new = new + str(math.factorial(int(tmp[l:ind-1])))
+				new = new + tmp[ind + 1:len(tmp)]
+				print(new)
+				tmp = new
 			else:
 				ind = tmp.index(o)
 				l: int = 0
 				r: int = 0
-				if len([x for x in tmp if x in operators]) != 1:
-					reachedNumber: bool = False
-					for i in range(0, ind):
-						if tmp[i] in numbers and not reachedNumber:
-							reachedNumber = True
-						if reachedNumber and tmp[i] not in numbers:
-							l = i + 1
-					for i in range(ind, len(tmp)):
-						if tmp[i] in numbers and not reachedNumber:
-							reachedNumber = True
-						if reachedNumber and tmp[i] not in numbers:
-							r = i
-				else:
-					r = len(tmp)
-					l = 0
-				print(l, r, tmp, tmp[l:r])
-				op: str = [x for x in tmp[l:r] if x in operators][0]
-				a: str = ""
-				b: str = ""
-				for char in tmp[l:r]:
-					if char not in numbers:
+				for i in range(ind - 1, 0, -1):
+					print("I:", i)
+					if tmp[i] not in numbers:
+						l = i -1
 						break
-					a = a + char
-				for char in tmp[tmp[l:r].index(op):r]:
-					if char in numbers:
-						b = b + char
-				t = tmp[:l]
-				print(t, l)
-				t = t + str(SimpleCalc(float(a), float(b), op))
-				t = t + tmp[r:len(tmp)]
-				tmp = t
-				print(t)
+				for i in range(ind + 1, len(tmp)):
+					r = i
+					if tmp[i] not in numbers:
+						r += 1
+						break
+				a, b, op = Separate(tmp[l:r + 1])
+				new = tmp[:l]
+				new = new + str(SimpleCalc(float(a), float(b), op))
+				new = new + tmp[r + 1:len(tmp)]
+				tmp = new
+			print(tmp)
 
 		
 
@@ -266,7 +268,23 @@ def Parse(text: str) -> float:
 				howDeep -= 1
 		return (ind, deepest)
 
-	mostNestedIndexes: list = []
+	symbols: list = []
+	curr: str = ""
+	for index, char in enumerate(text):
+		if char in operators or char in precedence:
+			if curr != "":
+				symbols.append(curr)
+			symbols.append(char)
+			curr = ""
+		if char not in operators and char not in precedence:
+			curr = curr + char
+	if curr != "":
+		symbols.append(curr)
+	print(symbols)
+	return	
+	
+
+	"""mostNestedIndexes: list = []
 	i: int = 0
 	char: str = ''
 	bracketsToEvaluate: int = text.count('(') + text.count("{") + text.count("[")
@@ -288,4 +306,4 @@ def Parse(text: str) -> float:
 			print(opers, nums)
 			Evaluate(text)
 			bracketsToEvaluate -= 1
-		i += 1
+		i += 1"""
