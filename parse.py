@@ -31,47 +31,7 @@ operators: tuple = ("+", "-", "*", "/", "%", "^", "&", "|", "~")
 
 order: tuple = ("(", "{", "[", "^", "*", "/", "%", "+", "-", "&", "|", "~")
 
-functions: tuple = ("log", "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "fac")
-
-def LastIndex(ls: tuple, vals: list):
-	index: int = 0
-	for i, item in enumerate(ls):
-		if item in vals:
-			index = i
-	return index
-
-def CountVariables(ls: list):
-	i: int = 0
-	for char in ls:
-		if char in variables:
-			i += 1
-	return i
-
-def CountValid(ls: list):
-	i: int = 0
-	for char in ls:
-		if char in valid:
-			i += 1
-
-def CountOperators(ls: list):
-	i: int = 0
-	for char in ls:
-		if char in operators:
-			i += 1
-
-def IndexVariables(ls: list):
-	indexes: list = []
-	for i in range(len(ls)):
-		if ls[i] in variables:
-			indexes.append(i)
-	return indexes
-
-def IndexValid(ls: list):
-	indexes: list = []
-	for i in range(len(ls)):
-		if ls[i] in valid:
-			indexes.append(i)
-	return indexes
+functions: tuple = ("log", "sin", "cos", "tan", "asin", "acos", "atan", "fac", "flr", "ceil")
 
 def SimpleCalc(a: float, b: float, operator: str):
 	if operator == "^":
@@ -93,98 +53,30 @@ def SimpleCalc(a: float, b: float, operator: str):
 	if operator == "~":
 		return int(a) ^ int(b)
 
-def GetNums(text: str) -> tuple:
-	s: str = ""
-	ls: list = []
-	for char in text:
-		if char not in numbers and s != "":
-			ls.append(s)
-			s = ""
-		else:
-			s = s + char
-	if len(ls) and s != "":
-		ls.append(s)
-	return ls
+def RunFunction(x: float, func: str):
+	if func == "log":
+		return math.log(x)
+	elif func == "sin":
+		return math.sin(x)
+	elif func == "cos":
+		return math.cos(x)
+	elif func == "tan":
+		return math.tan(x)
+	elif func == "asin":
+		return math.asin(x)
+	elif func == "acos":
+		return math.acos(x)
+	elif func == "atan":
+		return math.atan(x)
+	elif func == "fac":
+		return math.factorial(x)
+	elif func == "flr":
+		return math.floor(x)
+	elif func == "ceil":
+		return math.ceil(x)
 
-def Evaluate(text: list) -> float:
-	def Separate(txt: str) -> (str, str, str):
-		a, b, op = "", "", ""
-		addToA = True
-		for char in [x for x in txt if x != '']:
-			if char in operators and op == '':
-				addToA = False
-				op = char
-				continue
-			if addToA and char in numbers:
-				a = a + char
-			elif not addToA and char in numbers:
-				b = b + char
-		return a, b, op
-	ls = [x for x in text if x != ' ']
-	tmp: str = ""
-	for char in ls:
-		tmp = tmp + char
-	for o in order:
-		while o in tmp:
-			if o == '^':
-				ind = len(tmp) - 1 - tmp[::-1].index(o)
-				l: int = 0
-				r: int = 0
-				for i in range(ind - 1, 0, -1):
-					print("I:", i)
-					if tmp[i] not in numbers:
-						l = i -1
-						break
-				for i in range(ind + 1, len(tmp)):
-					r = i
-					if tmp[i] not in numbers:
-						r += 1
-						break
-				a, b, op = Separate(tmp[l:r + 1])
-				new = tmp[:l]
-				new = new + str(SimpleCalc(float(a), float(b), op))
-				new = new + tmp[r + 1:len(tmp)]
-				tmp = new
-			if o == '!':
-				ind = tmp.index(o)
-				l: int = 0
-				for i in range(ind - 1, 0, -1):
-					print("I:", i)
-					if tmp[i] not in numbers:
-						l = i -1
-						break
-				new = tmp[:l]
-				new = new + str(math.factorial(int(tmp[l:ind-1])))
-				new = new + tmp[ind + 1:len(tmp)]
-				print(new)
-				tmp = new
-			else:
-				ind = tmp.index(o)
-				l: int = 0
-				r: int = 0
-				for i in range(ind - 1, 0, -1):
-					print("I:", i)
-					if tmp[i] not in numbers:
-						l = i -1
-						break
-				for i in range(ind + 1, len(tmp)):
-					r = i
-					if tmp[i] not in numbers:
-						r += 1
-						break
-				a, b, op = Separate(tmp[l:r + 1])
-				new = tmp[:l]
-				new = new + str(SimpleCalc(float(a), float(b), op))
-				new = new + tmp[r + 1:len(tmp)]
-				tmp = new
-			print(tmp)
-
-		
-
-def Parse(text: str) -> float:
-	print(text)
-
-	#parsing
+def CheckSyntax(text: str) -> bool:
+	#making sure syntax is valid
 	last: str = ''
 	lastSignificant: list = ['', 0]
 	closed: bool = True
@@ -194,7 +86,6 @@ def Parse(text: str) -> float:
 		"{" : 0,
 		"[" : 0,
 	}
-	#making sure syntax is valid
 	for index, char in enumerate(text):
 		if char in valid:
 			if char in numbers and not reachedNumber:
@@ -204,6 +95,7 @@ def Parse(text: str) -> float:
 				print(f"\t{Colours.Bold}{Colours.Red}{text}")
 				print(f"\t{Colours.Red}"+f"~"*(index) + "^")
 				print(f"{Colours.Default}Character {index + 1}, expected number before operator: '{Colours.Red}{char}{Colours.Default}'")
+				return False
 			#checking brackets
 			if char in precedence:
 				closed = sum(brackets.values()) == 0
@@ -212,6 +104,7 @@ def Parse(text: str) -> float:
 					print(f"\t{Colours.Bold}{Colours.Red}{text}")
 					print(f"\t{Colours.Red}"+f"~"*(index) + "^")
 					print(f"{Colours.Default} Character {index + 1}, mis-matched brackets: '{Colours.Red}{char}{Colours.Default}'")
+					return False
 				if char in ("(", "{", "["):
 					brackets[char] += 1
 				elif char in (")", "}", "]"):
@@ -228,6 +121,7 @@ def Parse(text: str) -> float:
 					print(f"\t{Colours.Bold}{Colours.Red}{text}")
 					print(f"\t{Colours.Red}"+f"~"*(lastSignificant[1] + (index - lastSignificant[1])) + "^")
 					print(f"{Colours.Default} Character {index + 1}, unexpected operator: '{Colours.Red}{char}{Colours.Default}'")
+					return False
 			last = char
 			if char != " ": lastSignificant = [char, index]
 		#invalid character
@@ -236,41 +130,64 @@ def Parse(text: str) -> float:
 			print(f"\t{Colours.Bold}{Colours.Red}{text}")
 			print(f"\t{Colours.Red}"+f"~"*(index) + "^")
 			print(f"{Colours.Default}Character {index + 1}, invalid character: '{Colours.Red}{char}{Colours.Default}'")
-			return None
+			return False
 	closed = sum(brackets.values()) == 0
 	if not closed:
 		print(f"Error: ")
 		print(f"Incomplete bracket formatting")
+		return False
+	return True
 
-	def Deepest(text: str, xcpt: tuple = ()):
-		ind: int = 0
-		deepest: int = 0
-		howDeep: int = 0
-		if sum([text.count('('), text.count('{'), text.count('{')]):
-			try:
-				return text.index("("), text.index("(")
-			except: pass
-			try:
-				return text.index("{"), text.index("{")
-			except: pass
-			try:
-				return text.index("["), text.index('[')
-			except:
-				pass
-			
+def Evaluate(text: list) -> list:
+	while len([x for x in text if x in precedence]):
+		l: int = 0
+		r: int = 0
 		for index, char in enumerate(text):
-			if char in ("(", "{", "["):
-				if howDeep > deepest and index not in xcpt:
-					deepest = howDeep
-					ind = index
-				howDeep += 1
-			elif char in (")", "}", "]"):
-				howDeep -= 1
-		return (ind, deepest)
+			if char in precedence:
+				l = index
+				break
+		for index, char in enumerate(text[::-1]):
+			if char in precedence:
+				r = len(text) - 1 - index
+				break
+		t = text[0:l]
+		e = Evaluate(text[l+1:r])
+		for s in e:
+			t.append(s)
+		t = t + text[r+1:len(text)]
+		text = t
+	for f in functions:
+		while f in text:
+			ind = text.index(f)
+			val = RunFunction(float(text[ind+1]), f)
+			text[ind] = val
+			del text[ind + 1]
+	for o in order:
+		while o in text:
+			if o == '^':
+				ind = len(text) - 1 - text[::-1].index(o)
+				a = text[ind - 1]
+				b = text[ind + 1]
+				val = SimpleCalc(float(a), float(b), o)
+				text[ind] = str(val)
+				del text[ind - 1]
+				del text[ind]
+			else:
+				ind = text.index(o)
+				a = text[ind - 1]
+				b = text[ind + 1]
+				val = SimpleCalc(float(a), float(b), o)
+				text[ind] = str(val)
+				del text[ind - 1]
+				del text[ind]
+	return text
 
+def Parse(text: str) -> float:
+	if not CheckSyntax(text):
+		return
 	symbols: list = []
 	curr: str = ""
-	for index, char in enumerate(text):
+	for index, char in enumerate(x for x in text if x != ' '):
 		if char in operators or char in precedence:
 			if curr != "":
 				symbols.append(curr)
@@ -280,30 +197,9 @@ def Parse(text: str) -> float:
 			curr = curr + char
 	if curr != "":
 		symbols.append(curr)
-	print(symbols)
-	return	
-	
-
-	"""mostNestedIndexes: list = []
-	i: int = 0
-	char: str = ''
-	bracketsToEvaluate: int = text.count('(') + text.count("{") + text.count("[")
-	Evaluate(text)
-	while i < len(text):
-		char = text[i]
-		if bracketsToEvaluate > 0:
-			i = Deepest(text, mostNestedIndexes)[0] + 1
-			mostNestedIndexes.append(i)
-			nextBracket: int = 0
-			for t in range(i, len(text)):
-				if text[t] in (")", "}", "]"):
-					nextBracket = t
-					break
-			tmp: str = text[i: nextBracket]
-			print(tmp, i)
-			opers: list = [x for x in tmp if x in operators]
-			nums: list = GetNums(tmp)
-			print(opers, nums)
-			Evaluate(text)
-			bracketsToEvaluate -= 1
-		i += 1"""
+	try:
+		print(Evaluate(symbols)[0])
+	except ZeroDivisionError as e:
+		print(f'ZeroDivisionError: {e}')
+	except Exception as e:
+		print(f"Erorr occured: {e}")
